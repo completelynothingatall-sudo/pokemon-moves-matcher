@@ -1,22 +1,24 @@
-<script type="text/babel">
+import React, { useState, useEffect, useMemo } from "react";
+
 const NON_LETHAL_MOVES = new Set(["False Swipe", "Pain Split"]);
 
 async function loadText(url) {
   const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to load ${url}`);
   const txt = await res.text();
   return txt.split("\n").map(x => x.trim()).filter(Boolean);
 }
 
 async function loadDatasets() {
   const datasets = {
-    "Gen1": {
-      pokemon: "data/gen1_pokemon.txt",
-      moves: "data/gen1_moves.txt"
+    Gen1: {
+      pokemon: "/data/gen1_pokemon.txt",
+      moves: "/data/gen1_moves.txt",
     },
-    "Gen2": {
-      pokemon: "data/gen2_pokemon.txt",
-      moves: "data/gen2_moves.txt"
-    }
+    Gen2: {
+      pokemon: "/data/gen2_pokemon.txt",
+      moves: "/data/gen2_moves.txt",
+    },
   };
 
   const loaded = {};
@@ -85,24 +87,38 @@ function bestMovesMapping(pokemon, moves) {
   return mapping;
 }
 
-function PokemonMoveApp() {
-  const [datasets, setDatasets] = React.useState({});
-  const [selected, setSelected] = React.useState("");
-  const [mapping, setMapping] = React.useState({});
-  const [search, setSearch] = React.useState("");
+function highlightMove(mv, len, pos, sec) {
+  const prefix = mv.slice(pos, pos + len);
+  return (
+    <>
+      {mv.slice(0, pos)}
+      <span style={{ color: "limegreen" }}>{prefix}</span>
+      <span style={{ color: sec ? "orange" : "inherit" }}>
+        {mv.slice(pos + len)}
+        {sec ? "*" : pos ? ` (pos ${pos})` : ""}
+      </span>
+    </>
+  );
+}
 
-  React.useEffect(() => {
-    loadDatasets().then(setDatasets);
+export default function App() {
+  const [datasets, setDatasets] = useState({});
+  const [selected, setSelected] = useState("");
+  const [mapping, setMapping] = useState({});
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    loadDatasets().then(setDatasets).catch(console.error);
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (selected && datasets[selected]) {
       const { pokemon, moves } = datasets[selected];
       setMapping(bestMovesMapping(pokemon, moves));
     }
   }, [selected, datasets]);
 
-  const filtered = React.useMemo(() => {
+  const filtered = useMemo(() => {
     if (!search) return mapping;
     const s = search.toLowerCase();
     const res = {};
@@ -115,13 +131,13 @@ function PokemonMoveApp() {
   }, [search, mapping]);
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-4 text-sky-400">Pokémon → Best Moves</h1>
+    <div style={{ maxWidth: "700px", margin: "auto", padding: "1rem", color: "white", background: "#1e1e1e" }}>
+      <h1 style={{ color: "#38bdf8" }}>Pokémon → Best Moves</h1>
 
       <select
         value={selected}
         onChange={e => setSelected(e.target.value)}
-        className="bg-[#2e2e2e] text-white p-2 rounded mb-3 w-full"
+        style={{ width: "100%", padding: "0.5rem", marginBottom: "0.5rem" }}
       >
         <option value="">Select Dataset...</option>
         {Object.keys(datasets).map(name => (
@@ -134,37 +150,22 @@ function PokemonMoveApp() {
         value={search}
         onChange={e => setSearch(e.target.value)}
         placeholder="Search Pokémon or Move..."
-        className="w-full bg-[#2e2e2e] text-white p-2 rounded mb-4"
+        style={{ width: "100%", padding: "0.5rem", marginBottom: "1rem" }}
       />
 
-      <div className="bg-[#2a2a2a] p-4 rounded max-h-[500px] overflow-y-auto whitespace-pre-wrap">
-        {Object.entries(filtered).length === 0 && <p className="text-gray-500 italic">No data yet</p>}
+      <div style={{ background: "#2a2a2a", padding: "1rem", borderRadius: "8px", maxHeight: "500px", overflowY: "auto" }}>
+        {Object.entries(filtered).length === 0 && <p style={{ color: "gray", fontStyle: "italic" }}>No data yet</p>}
         {Object.entries(filtered).map(([pkmn, moves]) => (
-          <div key={pkmn} className="mb-3">
-            <div className="text-sky-400 font-bold">{pkmn}</div>
+          <div key={pkmn} style={{ marginBottom: "0.5rem" }}>
+            <div style={{ color: "#38bdf8", fontWeight: "bold" }}>{pkmn}</div>
             {moves.length ? moves.map(([mv, len, pos, sec]) => (
-              <div key={mv} className="ml-4">
+              <div key={mv} style={{ marginLeft: "1rem" }}>
                 • {highlightMove(mv, len, pos, sec)}
               </div>
-            )) : <div className="ml-4 italic text-gray-500">(no matching moves)</div>}
+            )) : <div style={{ marginLeft: "1rem", color: "gray", fontStyle: "italic" }}>(no matching moves)</div>}
           </div>
         ))}
       </div>
     </div>
   );
 }
-
-function highlightMove(mv, len, pos, sec) {
-  const prefix = mv.slice(pos, pos + len);
-  return (
-    <span>
-      {mv.slice(0, pos)}
-      <span className="text-green-400">{prefix}</span>
-      <span className={sec ? "text-amber-400" : ""}>{mv.slice(pos + len)}{sec ? "*" : (pos ? ` (pos ${pos})` : "")}</span>
-    </span>
-  );
-}
-
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(<PokemonMoveApp />);
-</script>
