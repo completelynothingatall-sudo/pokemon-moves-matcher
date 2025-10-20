@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.js": "/pokemon-moves-matcher/static/js/main.07d7c5f8.js",
+    "main.js": "/pokemon-moves-matcher/static/js/main.e31024c5.js",
     "index.html": "/pokemon-moves-matcher/index.html",
-    "main.07d7c5f8.js.map": "/pokemon-moves-matcher/static/js/main.07d7c5f8.js.map"
+    "main.e31024c5.js.map": "/pokemon-moves-matcher/static/js/main.e31024c5.js.map"
   },
   "entrypoints": [
-    "static/js/main.07d7c5f8.js"
+    "static/js/main.e31024c5.js"
   ]
 }
