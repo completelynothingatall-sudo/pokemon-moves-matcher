@@ -10,16 +10,19 @@ async function loadText(url) {
 }
 
 async function loadDatasets() {
+  const base = process.env.PUBLIC_URL;
+
   const datasets = {
     Gen1: {
-      pokemon: "/data/gen1_pokemon.txt",
-      moves: "/data/gen1_moves.txt",
+      pokemon: `${base}/data/gen1_pokemon.txt`,
+      moves: `${base}/data/gen1_moves.txt`,
     },
     Gen2: {
-      pokemon: "/data/gen2_pokemon.txt",
-      moves: "/data/gen2_moves.txt",
+      pokemon: `${base}/data/gen2_pokemon.txt`,
+      moves: `${base}/data/gen2_moves.txt`,
     },
   };
+
 
   const loaded = {};
   for (const [name, { pokemon, moves }] of Object.entries(datasets)) {
