@@ -1,0 +1,170 @@
+<script type="text/babel">
+const NON_LETHAL_MOVES = new Set(["False Swipe", "Pain Split"]);
+
+async function loadText(url) {
+  const res = await fetch(url);
+  const txt = await res.text();
+  return txt.split("\n").map(x => x.trim()).filter(Boolean);
+}
+
+async function loadDatasets() {
+  const datasets = {
+    "Gen1": {
+      pokemon: "data/gen1_pokemon.txt",
+      moves: "data/gen1_moves.txt"
+    },
+    "Gen2": {
+      pokemon: "data/gen2_pokemon.txt",
+      moves: "data/gen2_moves.txt"
+    }
+  };
+
+  const loaded = {};
+  for (const [name, { pokemon, moves }] of Object.entries(datasets)) {
+    const [pList, mList] = await Promise.all([loadText(pokemon), loadText(moves)]);
+    loaded[name] = { pokemon: pList, moves: mList };
+  }
+  return loaded;
+}
+
+function longestPrefixAnywhere(move, pkmn) {
+  let bestPos = null, bestLen = 0;
+  const moveL = move.toLowerCase(), pkmnL = pkmn.toLowerCase();
+  for (let start = 0; start < moveL.length; start++) {
+    let length = 0;
+    for (let i = 0; i < pkmnL.length; i++) {
+      if (start + i < moveL.length && moveL[start + i] === pkmnL[i]) length++;
+      else break;
+    }
+    if (length > bestLen || (length === bestLen && (bestPos === null || start < bestPos))) {
+      bestLen = length;
+      bestPos = start;
+    }
+  }
+  return [bestLen, bestPos];
+}
+
+function bestMovesMapping(pokemon, moves) {
+  const mapping = {};
+  pokemon.forEach(pkmn => {
+    let bestLen = 0, bestMoves = [];
+    moves.forEach(mv => {
+      const [lp, pos] = longestPrefixAnywhere(mv, pkmn);
+      if (lp === 0) return;
+      if (lp > bestLen) {
+        bestLen = lp;
+        bestMoves = [[mv, lp, pos, false]];
+      } else if (lp === bestLen) {
+        bestMoves.push([mv, lp, pos, false]);
+      }
+    });
+    if (!bestMoves.length) {
+      mapping[pkmn] = [];
+      return;
+    }
+    const prefixMoves = bestMoves.filter(([_, __, pos]) => pos === 0);
+    if (prefixMoves.length) bestMoves = prefixMoves;
+    const allNonLethal = bestMoves.every(([mv]) => NON_LETHAL_MOVES.has(mv));
+    if (allNonLethal) {
+      const candidates = moves
+        .filter(mv => !NON_LETHAL_MOVES.has(mv) && !bestMoves.some(([b]) => b === mv))
+        .map(mv => {
+          const [lp, pos] = longestPrefixAnywhere(mv, pkmn);
+          return [mv, lp, pos, true];
+        })
+        .filter(([_, lp]) => lp > 0);
+      if (candidates.length) {
+        const maxLen = Math.max(...candidates.map(c => c[1]));
+        const earliestPos = Math.min(...candidates.filter(c => c[1] === maxLen).map(c => c[2]));
+        const secondaryMoves = candidates.filter(c => c[1] === maxLen && c[2] === earliestPos);
+        bestMoves = bestMoves.concat(secondaryMoves);
+      }
+    }
+    mapping[pkmn] = bestMoves;
+  });
+  return mapping;
+}
+
+function PokemonMoveApp() {
+  const [datasets, setDatasets] = React.useState({});
+  const [selected, setSelected] = React.useState("");
+  const [mapping, setMapping] = React.useState({});
+  const [search, setSearch] = React.useState("");
+
+  React.useEffect(() => {
+    loadDatasets().then(setDatasets);
+  }, []);
+
+  React.useEffect(() => {
+    if (selected && datasets[selected]) {
+      const { pokemon, moves } = datasets[selected];
+      setMapping(bestMovesMapping(pokemon, moves));
+    }
+  }, [selected, datasets]);
+
+  const filtered = React.useMemo(() => {
+    if (!search) return mapping;
+    const s = search.toLowerCase();
+    const res = {};
+    for (const [pkmn, moves] of Object.entries(mapping)) {
+      if (pkmn.toLowerCase().includes(s) || moves.some(([m]) => m.toLowerCase().includes(s))) {
+        res[pkmn] = moves.filter(([m]) => m.toLowerCase().includes(s) || pkmn.toLowerCase().includes(s));
+      }
+    }
+    return res;
+  }, [search, mapping]);
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      <h1 className="text-3xl font-bold mb-4 text-sky-400">Pokémon → Best Moves</h1>
+
+      <select
+        value={selected}
+        onChange={e => setSelected(e.target.value)}
+        className="bg-[#2e2e2e] text-white p-2 rounded mb-3 w-full"
+      >
+        <option value="">Select Dataset...</option>
+        {Object.keys(datasets).map(name => (
+          <option key={name} value={name}>{name}</option>
+        ))}
+      </select>
+
+      <input
+        type="text"
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        placeholder="Search Pokémon or Move..."
+        className="w-full bg-[#2e2e2e] text-white p-2 rounded mb-4"
+      />
+
+      <div className="bg-[#2a2a2a] p-4 rounded max-h-[500px] overflow-y-auto whitespace-pre-wrap">
+        {Object.entries(filtered).length === 0 && <p className="text-gray-500 italic">No data yet</p>}
+        {Object.entries(filtered).map(([pkmn, moves]) => (
+          <div key={pkmn} className="mb-3">
+            <div className="text-sky-400 font-bold">{pkmn}</div>
+            {moves.length ? moves.map(([mv, len, pos, sec]) => (
+              <div key={mv} className="ml-4">
+                • {highlightMove(mv, len, pos, sec)}
+              </div>
+            )) : <div className="ml-4 italic text-gray-500">(no matching moves)</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function highlightMove(mv, len, pos, sec) {
+  const prefix = mv.slice(pos, pos + len);
+  return (
+    <span>
+      {mv.slice(0, pos)}
+      <span className="text-green-400">{prefix}</span>
+      <span className={sec ? "text-amber-400" : ""}>{mv.slice(pos + len)}{sec ? "*" : (pos ? ` (pos ${pos})` : "")}</span>
+    </span>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<PokemonMoveApp />);
+</script>
