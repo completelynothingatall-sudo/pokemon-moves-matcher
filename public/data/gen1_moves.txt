@@ -1,11 +1,11 @@
 Explosion
-Self-Destruct
+Selfdestruct
 Hyper Beam
 Sky Attack
 Skull Bash
 Hi Jump Kick
 Thrash
-Solar Beam
+SolarBeam
 Petal Dance
 Mega Kick
 Double-Edge
@@ -37,7 +37,7 @@ Leech Life
 Hyper Fang
 Drill Peck
 Dig
-Thunder Punch
+ThunderPunch
 Rock Slide
 Ice Punch
 Fire Punch
@@ -48,14 +48,14 @@ Stomp
 Sludge
 Psybeam
 Horn Attack
-Bubble Beam
+BubbleBeam
 Bone Club
 Aurora Beam
 Wing Attack
 Swift
 Rolling Kick
 Bite
-Vice Grip
+ViceGrip
 Razor Leaf
 Struggle
 Rock Throw
@@ -65,7 +65,7 @@ Confusion
 Bonemerang
 Vine Whip
 Water Gun
-Thunder Shock
+ThunderShock
 Tackle
 Scratch
 Quick Attack
@@ -92,7 +92,7 @@ Comet Punch
 Wrap
 Poison Sting
 Fury Attack
-Double Slap
+DoubleSlap
 Bind
 Barrage
 Constrict
@@ -100,10 +100,10 @@ Toxic
 Swords Dance
 Supersonic
 Super Fang
-Sonic Boom
+SonicBoom
 Seismic Toss
 Psywave
-Poison Powder
+PoisonPowder
 Poison Gas
 Night Shade
 Mirror Move
