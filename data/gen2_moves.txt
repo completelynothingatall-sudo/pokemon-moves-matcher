@@ -3,7 +3,7 @@ Self-Destruct
 Hyper Beam
 Sky Attack
 Skull Bash
-High Jump Kick
+Hi Jump Kick
 Thrash
 Solar Beam
 Petal Dance
@@ -139,7 +139,7 @@ Octazooka
 Thief
 Hidden Power
 Flame Wheel
-Feint Attack
+Faint Attack
 Dragon Breath
 Ancient Power
 Icy Wind
