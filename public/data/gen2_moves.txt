@@ -139,7 +139,7 @@ Octazooka
 Thief
 Hidden Power
 Flame Wheel
-Feint Attack
+Faint Attack
 Dragon Breath
 Ancient Power
 Icy Wind
